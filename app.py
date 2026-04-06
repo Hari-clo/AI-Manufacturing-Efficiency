@@ -1,10 +1,7 @@
 # =========================================================
-# 🏭 AI MANUFACTURING EFFICIENCY INTELLIGENCE SYSTEM
+# 🏭 AI MANUFACTURING INTELLIGENCE DASHBOARD
 # =========================================================
 
-# -------------------------------
-# 📦 IMPORT LIBRARIES
-# -------------------------------
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -12,97 +9,80 @@ import joblib
 import matplotlib.pyplot as plt
 
 # -------------------------------
-# 📂 LOAD MODEL & SCALER
+# LOAD MODEL
 # -------------------------------
 rf = joblib.load("model.pkl")
 scaler = joblib.load("scaler.pkl")
 
 # -------------------------------
-# ⚙️ PAGE CONFIGURATION
+# PAGE CONFIG
 # -------------------------------
-st.set_page_config(page_title="AI Manufacturing System", layout="wide")
+st.set_page_config(page_title="Manufacturing AI System", layout="wide")
 
 # -------------------------------
-# 🏷️ TITLE & DESCRIPTION
+# TITLE
 # -------------------------------
-st.title("🏭 AI-Based Manufacturing Efficiency Intelligence System")
+st.title("🏭 Smart Manufacturing Efficiency Dashboard")
 
 st.markdown("""
-This system provides **real-time efficiency classification** using sensor and network data.  
-It also offers **insights and recommendations** for improving manufacturing performance.
+### 🎯 What This System Solves
+Traditional factories rely on manual monitoring.  
+This AI system provides **instant efficiency classification** and highlights **root causes of inefficiency**.
+
+👉 Helps reduce:
+- Production loss  
+- Machine instability  
+- Network inefficiencies  
 """)
 
 # -------------------------------
-# 🎛️ SIDEBAR INPUTS
+# SIDEBAR INPUT
 # -------------------------------
 st.sidebar.header("⚙️ Machine Inputs")
 
-temp = st.sidebar.slider("Temperature (°C)", 0.0, 200.0, 50.0)
-vibration = st.sidebar.slider("Vibration (Hz)", 0.0, 100.0, 10.0)
-power = st.sidebar.slider("Power Consumption (kW)", 1.0, 500.0, 100.0)
-latency = st.sidebar.slider("Network Latency (ms)", 0.0, 500.0, 50.0)
-packet_loss = st.sidebar.slider("Packet Loss (%)", 0.0, 100.0, 5.0)
+temp = st.sidebar.slider("Temperature", 0.0, 200.0, 50.0)
+vibration = st.sidebar.slider("Vibration", 0.0, 100.0, 10.0)
+power = st.sidebar.slider("Power", 1.0, 500.0, 100.0)
+latency = st.sidebar.slider("Latency", 0.0, 500.0, 50.0)
+packet_loss = st.sidebar.slider("Packet Loss", 0.0, 100.0, 5.0)
 
 operation_mode = st.sidebar.selectbox("Operation Mode", ["Normal", "High Load"])
 operation_mode_encoded = 0 if operation_mode == "Normal" else 1
 
 # -------------------------------
-# 🧠 FEATURE ENGINEERING
+# FEATURE ENGINEERING
 # -------------------------------
-energy_eff = 100 / power if power != 0 else 0
+energy_eff = 100 / power
 network_quality = 100 - (packet_loss + latency / 10)
 
 temp_stability = 0
 vibration_stability = 0
 
 # -------------------------------
-# 📊 CREATE INPUT USING TRAINING FEATURES
+# INPUT PREPARATION
 # -------------------------------
 feature_names = scaler.feature_names_in_
 
-input_dict = {feature: 0 for feature in feature_names}
+input_dict = {f: 0 for f in feature_names}
 
-# Fill known features
-if "Temperature_C" in input_dict:
-    input_dict["Temperature_C"] = temp
+input_dict["Temperature_C"] = temp
+input_dict["Vibration_Hz"] = vibration
+input_dict["Power_Consumption_kW"] = power
+input_dict["Network_Latency_ms"] = latency
+input_dict["Packet_Loss_%"] = packet_loss
+input_dict["Operation_Mode"] = operation_mode_encoded
+input_dict["Energy_Efficiency"] = energy_eff
+input_dict["Network_Quality"] = network_quality
+input_dict["Temp_Stability"] = temp_stability
+input_dict["Vibration_Stability"] = vibration_stability
 
-if "Vibration_Hz" in input_dict:
-    input_dict["Vibration_Hz"] = vibration
-
-if "Power_Consumption_kW" in input_dict:
-    input_dict["Power_Consumption_kW"] = power
-
-if "Network_Latency_ms" in input_dict:
-    input_dict["Network_Latency_ms"] = latency
-
-if "Packet_Loss_%" in input_dict:
-    input_dict["Packet_Loss_%"] = packet_loss
-
-if "Operation_Mode" in input_dict:
-    input_dict["Operation_Mode"] = operation_mode_encoded
-
-if "Energy_Efficiency" in input_dict:
-    input_dict["Energy_Efficiency"] = energy_eff
-
-if "Network_Quality" in input_dict:
-    input_dict["Network_Quality"] = network_quality
-
-if "Temp_Stability" in input_dict:
-    input_dict["Temp_Stability"] = temp_stability
-
-if "Vibration_Stability" in input_dict:
-    input_dict["Vibration_Stability"] = vibration_stability
-
-# Convert to DataFrame
 input_df = pd.DataFrame([input_dict])
-
-# Scale input
 input_scaled = scaler.transform(input_df)
 
 # -------------------------------
-# 🔮 PREDICTION
+# PREDICTION
 # -------------------------------
-if st.sidebar.button("🚀 Analyze Efficiency"):
+if st.sidebar.button("🚀 Analyze"):
 
     prediction = rf.predict(input_scaled)
     probs = rf.predict_proba(input_scaled)
@@ -112,73 +92,101 @@ if st.sidebar.button("🚀 Analyze Efficiency"):
     label_map = {0: "Low", 1: "Medium", 2: "High"}
     result = label_map[prediction[0]]
 
-    st.markdown("---")
-
     # -------------------------------
-    # 🎯 RESULT DISPLAY
+    # RESULT
     # -------------------------------
-    st.subheader("🎯 Efficiency Status")
+    st.subheader("🎯 Efficiency Result")
 
     if result == "High":
-        st.success(f"✅ {result} Efficiency")
-        st.balloons()
+        st.success(f"✅ HIGH Efficiency")
     elif result == "Medium":
-        st.warning(f"⚠️ {result} Efficiency")
+        st.warning(f"⚠️ MEDIUM Efficiency")
     else:
-        st.error(f"❌ {result} Efficiency")
+        st.error(f"❌ LOW Efficiency")
 
-    st.metric("Confidence Score", f"{confidence:.2f}%")
+    st.metric("Confidence", f"{confidence:.2f}%")
 
     # -------------------------------
-    # 📊 INPUT VISUALIZATION
+    # GRAPH 1: SENSOR ANALYSIS
     # -------------------------------
-    st.subheader("📊 Machine Condition Overview")
+    st.subheader("📊 Sensor Analysis")
 
-    df_plot = pd.DataFrame({
-        "Metric": ["Temperature", "Vibration", "Power", "Latency", "Packet Loss"],
-        "Value": [temp, vibration, power, latency, packet_loss]
+    sensor_df = pd.DataFrame({
+        "Metric": ["Temperature", "Vibration", "Power"],
+        "Value": [temp, vibration, power]
     })
 
-    fig, ax = plt.subplots()
-    ax.bar(df_plot["Metric"], df_plot["Value"])
-    ax.set_ylabel("Values")
-    ax.set_title("Current System State")
-    st.pyplot(fig)
+    fig1, ax1 = plt.subplots()
+    ax1.bar(sensor_df["Metric"], sensor_df["Value"])
+    ax1.set_title("Sensor Conditions")
+    st.pyplot(fig1)
 
     # -------------------------------
-    # 🔍 INSIGHTS
+    # GRAPH 2: NETWORK ANALYSIS
     # -------------------------------
-    st.subheader("🔍 Key Insights")
+    st.subheader("🌐 Network Analysis")
+
+    net_df = pd.DataFrame({
+        "Metric": ["Latency", "Packet Loss", "Network Quality"],
+        "Value": [latency, packet_loss, network_quality]
+    })
+
+    fig2, ax2 = plt.subplots()
+    ax2.bar(net_df["Metric"], net_df["Value"])
+    ax2.set_title("Network Performance")
+    st.pyplot(fig2)
+
+    # -------------------------------
+    # GRAPH 3: PERFORMANCE SCORE
+    # -------------------------------
+    st.subheader("📈 Performance Overview")
+
+    performance = pd.DataFrame({
+        "Category": ["Energy Efficiency", "Network Quality"],
+        "Score": [energy_eff, network_quality]
+    })
+
+    fig3, ax3 = plt.subplots()
+    ax3.bar(performance["Category"], performance["Score"])
+    ax3.set_title("System Efficiency Indicators")
+    st.pyplot(fig3)
+
+    # -------------------------------
+    # INSIGHTS
+    # -------------------------------
+    st.subheader("🔍 Insights")
 
     if temp > 120:
-        st.write("• High temperature may indicate overheating risk")
+        st.write("• Overheating detected → impacts efficiency")
 
     if vibration > 50:
-        st.write("• Excessive vibration suggests machine instability")
+        st.write("• High vibration → machine instability")
 
     if latency > 200:
-        st.write("• Network latency is high, may affect coordination")
+        st.write("• Network delay → affects coordination")
 
     if packet_loss > 20:
-        st.write("• Packet loss detected, communication reliability reduced")
-
-    if power > 300:
-        st.write("• High power usage may reduce efficiency")
+        st.write("• Data loss → unreliable communication")
 
     # -------------------------------
-    # 💡 RECOMMENDATIONS
+    # BUSINESS IMPACT
     # -------------------------------
-    st.subheader("💡 Recommendations")
+    st.subheader("📉 Impact on Manufacturing")
 
-    st.write("""
-    • Optimize machine calibration to reduce vibration  
-    • Improve cooling mechanisms to control temperature  
-    • Upgrade network infrastructure to reduce latency  
-    • Monitor power consumption and optimize usage  
-    """)
+    if result == "Low":
+        st.write("""
+        ❌ Production loss likely  
+        ❌ Increased maintenance cost  
+        ❌ Reduced output quality  
+        """)
+    else:
+        st.write("""
+        ✅ Stable production  
+        ✅ Optimized performance  
+        """)
 
 # -------------------------------
-# 📌 FOOTER
+# FOOTER
 # -------------------------------
 st.markdown("---")
-st.markdown("Developed as an AI-driven smart manufacturing solution 🚀")
+st.markdown("AI-Powered Smart Factory System 🚀")
