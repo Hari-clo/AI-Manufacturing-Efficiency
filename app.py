@@ -61,6 +61,9 @@ vibration_stability = 0
 # -------------------------------
 # INPUT PREPARATION
 # -------------------------------
+# -------------------------------
+# INPUT FEATURES (FIXED)
+# -------------------------------
 feature_names = scaler.feature_names_in_
 
 input_dict = {f: 0 for f in feature_names}
@@ -71,14 +74,17 @@ input_dict["Power_Consumption_kW"] = power
 input_dict["Network_Latency_ms"] = latency
 input_dict["Packet_Loss_%"] = packet_loss
 input_dict["Operation_Mode"] = operation_mode_encoded
-input_dict["Energy_Efficiency"] = energy_eff
-input_dict["Network_Quality"] = network_quality
-input_dict["Temp_Stability"] = temp_stability
-input_dict["Vibration_Stability"] = vibration_stability
+
+input_dict["Production_Speed_units_per_hr"] = production
+
+input_dict["Energy_Efficiency"] = production / power if power != 0 else 0
+input_dict["Network_Quality"] = 100 - (packet_loss + latency / 10)
+
+input_dict["Temp_Stability"] = 0
+input_dict["Vibration_Stability"] = 0
 
 input_df = pd.DataFrame([input_dict])
 input_scaled = scaler.transform(input_df)
-
 # -------------------------------
 # PREDICTION
 # -------------------------------
