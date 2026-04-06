@@ -45,6 +45,8 @@ vibration = st.sidebar.slider("Vibration", 0.0, 100.0, 10.0)
 power = st.sidebar.slider("Power", 1.0, 500.0, 100.0)
 latency = st.sidebar.slider("Latency", 0.0, 500.0, 50.0)
 packet_loss = st.sidebar.slider("Packet Loss", 0.0, 100.0, 5.0)
+production = st.sidebar.slider("Production Speed (units/hr)", 0.0, 1000.0, 200.0)
+
 
 operation_mode = st.sidebar.selectbox("Operation Mode", ["Normal", "High Load"])
 operation_mode_encoded = 0 if operation_mode == "Normal" else 1
@@ -52,7 +54,7 @@ operation_mode_encoded = 0 if operation_mode == "Normal" else 1
 # -------------------------------
 # FEATURE ENGINEERING
 # -------------------------------
-energy_eff = 100 / power
+energy_eff = production / power if power != 0 else 0
 network_quality = 100 - (packet_loss + latency / 10)
 
 temp_stability = 0
